@@ -1,0 +1,152 @@
+scalar JSON
+scalar DateTime
+
+enum PlaceType { CITY TOWN VILLAGE }
+enum SortDirection { ASC DESC }
+enum CountrySortField { NAME POPULATION }
+enum RegionSortField { NAME POPULATION }
+enum PlaceSortField { NAME POPULATION CREATED_AT }
+enum StatSortField { NAME PLACES_COUNT TOTAL_POPULATION }
+
+input PaginationInput { limit: Int = 20, offset: Int = 0 }
+input CountryOrder { field: CountrySortField = NAME, direction: SortDirection = ASC }
+input RegionOrder  { field: RegionSortField = NAME,  direction: SortDirection = ASC }
+input PlaceOrder   { field: PlaceSortField = NAME,   direction: SortDirection = ASC }
+input StatOrder    { field: StatSortField = NAME,    direction: SortDirection = ASC }
+
+input CountryFilter { search: String, populationMin: Int }
+input RegionFilter  { countryId: ID, search: String, populationMin: Int }
+input PlaceFilter {
+  countryId: ID
+  regionId: ID
+  types: [PlaceType!]
+  populationMin: Int
+  populationMax: Int
+  hasTimezone: Boolean
+}
+
+type Country {
+  id: ID!
+  iso2: String!
+  iso3: String
+  nameLocal: String!
+  nameRu: String
+  nameEn: String
+  capitalName: String
+  population: Int
+  areaKm2: Float
+  lat: Float
+  lon: Float
+  boundary: JSON
+  regionsCount: Int!
+  placesCount: Int!
+  regions(filter: RegionFilter, orderBy: RegionOrder, pagination: PaginationInput): RegionPage!
+}
+
+type Region {
+  id: ID!
+  country: Country!
+  nameLocal: String!
+  nameRu: String
+  nameEn: String
+  iso31662: String
+  population: Int
+  lat: Float
+  lon: Float
+  boundary: JSON
+  placesCount: Int!
+  places(filter: PlaceFilter, orderBy: PlaceOrder, pagination: PaginationInput): PlacePage!
+}
+
+type Place {
+  id: ID!
+  country: Country!
+  region: Region
+  type: PlaceType!
+  nameLocal: String!
+  nameRu: String
+  nameEn: String
+  population: Int
+  populationSource: String
+  lat: Float!
+  lon: Float!
+  timezone: String
+  origin: String!
+  isUserModified: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  sources: [SourceRef!]!
+}
+
+type SourceRef { source: String!, externalId: String!, fetchedAt: DateTime! }
+
+type GeoStat {
+  id: ID!
+  name: String!
+  placesCount: Int!
+  citiesCount: Int!
+  townsCount: Int!
+  villagesCount: Int!
+  totalPopulation: Float!
+}
+
+type CollectionRun {
+  id: ID!
+  source: String!
+  scope: String
+  status: String!
+  startedAt: DateTime!
+  finishedAt: DateTime
+  inserted: Int!
+  updated: Int!
+  failed: Int!
+}
+
+type CountryPage { nodes: [Country!]!, totalCount: Int! }
+type RegionPage  { nodes: [Region!]!,  totalCount: Int! }
+type PlacePage   { nodes: [Place!]!,   totalCount: Int! }
+type StatPage    { nodes: [GeoStat!]!, totalCount: Int! }
+type DeletePlacePayload { id: ID!, deleted: Boolean! }
+
+input CreatePlaceInput {
+  countryId: ID!
+  regionId: ID
+  type: PlaceType!
+  nameLocal: String!
+  nameRu: String
+  nameEn: String
+  population: Int
+  lat: Float!
+  lon: Float!
+  timezone: String
+}
+
+input UpdatePlaceInput {
+  regionId: ID
+  type: PlaceType
+  nameLocal: String
+  nameRu: String
+  nameEn: String
+  population: Int
+  lat: Float
+  lon: Float
+  timezone: String
+}
+
+type Query {
+  countries(filter: CountryFilter, orderBy: CountryOrder, pagination: PaginationInput): CountryPage!
+  country(id: ID!): Country
+  regions(filter: RegionFilter, orderBy: RegionOrder, pagination: PaginationInput): RegionPage!
+  region(id: ID!): Region
+  places(filter: PlaceFilter, search: String, orderBy: PlaceOrder, pagination: PaginationInput): PlacePage!
+  place(id: ID!): Place
+  countryStats(orderBy: StatOrder, pagination: PaginationInput): StatPage!
+  regionStats(countryId: ID!, orderBy: StatOrder, pagination: PaginationInput): StatPage!
+  collectionRuns(limit: Int = 10): [CollectionRun!]!
+}
+
+type Mutation {
+  createPlace(input: CreatePlaceInput!): Place!
+  updatePlace(id: ID!, input: UpdatePlaceInput!): Place!
+  deletePlace(id: ID!): DeletePlacePayload!
+}

@@ -1,0 +1,30 @@
+{
+  "name": "geoatlas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GeoAtlas - учебный клиент-серверный проект (GraphQL, PostgreSQL, React)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "migrate": "node db/migrate.js",
+    "migrate:rollback": "node db/migrate.js rollback",
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "collect": "node collector/cli.js",
+    "collect:all": "node collector/cli.js",
+    "collect:schedule": "node collector/scheduler.js"
+  },
+  "dependencies": {
+    "@graphql-tools/schema": "^10.0.0",
+    "@turf/simplify": "^7.0.0",
+    "dataloader": "^2.2.2",
+    "dotenv": "^16.4.5",
+    "graphql": "^16.9.0",
+    "graphql-scalars": "^1.23.0",
+    "graphql-yoga": "^5.7.0",
+    "knex": "^3.1.0",
+    "node-cron": "^3.0.3",
+    "osmtogeojson": "^3.0.0-beta.5",
+    "pg": "^8.12.0"
+  }
+}
